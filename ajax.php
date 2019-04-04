@@ -1,8 +1,6 @@
+<?php include("db_conexion.php"); ?>
 <?php
 	if (isset($_POST['key'])) {
-
-		$conn = new mysqli('localhost', 'root', '4dm!n!5tr4d0r', 'mysqldatamanager');
-
 		if ($_POST['key'] == 'getExistingData') {
 			$start = $conn->real_escape_string($_POST['start']);
 			$limit = $conn->real_escape_string($_POST['limit']);
@@ -28,9 +26,9 @@
 				exit('reachedMax');
 		}
 
-		$name = $conn->real_escape_string($_POST['name']);
-		$shortDesc = $conn->real_escape_string($_POST['shortDesc']);
-		$longDesc = $conn->real_escape_string($_POST['longDesc']);
+		$name =strtoupper($conn->real_escape_string($_POST['name']));
+		$shortDesc =strtoupper( $conn->real_escape_string($_POST['shortDesc']));
+		$longDesc = strtoupper($conn->real_escape_string($_POST['longDesc']));
 
 		if ($_POST['key'] == 'addNew') {
 			$sql = $conn->query("SELECT id FROM country WHERE countryName = '$name'");
