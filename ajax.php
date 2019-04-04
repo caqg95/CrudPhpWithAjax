@@ -1,6 +1,17 @@
 <?php include("db_conexion.php"); ?>
 <?php
 	if (isset($_POST['key'])) {
+		if ($_POST['key'] == 'getRowData') {
+			$rowId=$conn->real_escape_string($_POST['rowId']);
+			$sql = $conn->query("SELECT countryName,shortDesc,longDesc FROM country WHERE id = '$rowId'");
+			$data=$sql->fetch_array();
+			$jsonArray=array(
+				'countryName'=>$data['countryName'],
+				'shortDesc'=>$data['shortDesc'],
+				'longDesc'=>$data['longDesc'],
+			);
+			exit(json_encode($jsonArray));
+		}
 		if ($_POST['key'] == 'getExistingData') {
 			$start = $conn->real_escape_string($_POST['start']);
 			$limit = $conn->real_escape_string($_POST['limit']);
@@ -14,7 +25,7 @@
 							<td>'.$data["id"].'</td>
 							<td>'.$data["countryName"].'</td>
 							<td>
-								<input type="button" value="Edit" class="btn btn-warning">
+								<input type="button" onclick="edit('.$data["id"].')" value="Edit" class="btn btn-warning">
 								<input type="button" value="View" class="btn btn-primary">
 								<input type="button" value="Delete" class="btn btn-danger">
 							</td>
