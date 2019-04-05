@@ -18,14 +18,23 @@
                     </div>
 
                     <div class="modal-body">
-                        <input type="text" class="form-control" required placeholder="Country Name..." id="countryName"><br>
-                        <textarea class="form-control" id="shortDesc"  placeholder="Short Country Description"></textarea><br>
-                        <textarea class="form-control" id="longDesc" placeholder="Long Country Description"></textarea><br>
-                         <input type="hidden" id="editRowId" value="0">
+                        <div id="editContent">
+                                <input type="text" class="form-control" required placeholder="Country Name..." id="countryName"><br>
+                                <textarea class="form-control" id="shortDesc"  placeholder="Short Country Description"></textarea><br>
+                                <textarea class="form-control" id="longDesc" placeholder="Long Country Description"></textarea><br>
+                                <input type="hidden" id="editRowId" value="0">
+                        </div>
+                        <div id=showContent style="display:none;">
+                                <h3>Short Description</h3>
+                                <div id="shortDescView"></div>
+                                <hr>
+                                <h3>Long Description</h3>
+                                <div id="longDescView" style="overflow-y: scroll;height: 300px;"></div>
+                        </div>              
                     </div>
-
                     <div class="modal-footer">
-                        <input type="button" onclick="manageData('addNew')" value="Save" class="btn btn-success">
+                        <input type="button" class="btn btn-primary" data-dismiss="modal" value="close" id="closeBtn" style="display:none">
+                        <input type="button" id="manageBtn" onclick="manageData('addNew')" value="Save" class="btn btn-success">
                     </div>
                 </div>
             </div>
@@ -59,14 +68,41 @@
     <script type="text/javascript">
      $(document).ready(function() {
             $("#addNew").on('click', function () {
-               $("#tableManager").modal('show');
-               $("#countryName").val('');
-               $("#shortDesc").val('');
-               $("#longDesc").val('');
+               $("#tableManager").modal('show');      
+            });
+            $("#tableManager").on('hidden.bs.modal', function () {
+                $("#showContent").fadeOut();
+                $("#editContent").fadeIn();
+                $("#editRowId").val(0);
+                $("#countryName").val("");
+                $("#shortDesc").val("");
+                $("#longDesc").val("");
+                $("#closeBtn").fadeOut();
+                $("#manageBtn").attr('value','Save').attr('onclick',"manageData('addNew')").fadeIn();            
             });
             getExistingData(0, 5);
         });
-        function edit(rowId)
+        function deleteRow(rowId){
+            if(confirm('Are you sure??'))
+            {
+                $.ajax({
+                    url:'ajax.php',
+                    method:'POST',
+                    dataType:'text',
+                    data:{
+                        key:'deleteRow',
+                        rowId:rowId
+                    },success:function(response){
+                        $("#country_"+rowId).parent().remove();
+                        $.notify(response,"success");
+                    }
+                });  
+            }
+            else{
+                $.notify("you give up!","error");
+            }
+        }
+        function viewORedit(rowId,type)
         {
             $.ajax({
                    url: 'ajax.php',
@@ -76,11 +112,30 @@
                        key: 'getRowData',
                        rowId:rowId           
                    }, success: function (response) {
-                      $("#editRowId").val(rowId);
-                      $("#countryName").val(response.countryName);
-                      $("#shortDesc").val(response.shortDesc);
-                      $("#longDesc").val(response.longDesc);
-                      $("#tableManager").modal('show');                
+                       if(type=="view"){
+                            $("#showContent").fadeIn();
+                            $("#editContent").fadeOut();
+                            $("#shortDescView").html(response.shortDesc);
+                            $("#longDescView").html(response.longDesc);
+                            $(".modal-title").html(response.countryName);    
+                            $("#manageBtn").fadeOut(); 
+                            $("#closeBtn").fadeIn();                 
+                       }
+                       else{
+                            $("#editContent").fadeIn();
+                            $("#editRowId").val(rowId);
+                            $("#showContent").fadeOut();
+                           
+                            $("#countryName").val(response.countryName);
+                            $("#shortDesc").val(response.shortDesc);
+                            $("#longDesc").val(response.longDesc);
+                            $("#closeBtn").fadeOut();    
+                            $("#manageBtn").fadeIn();
+                            $("#manageBtn").attr('value','Save Changes').attr('onclick',"manageData('UpdateRow')");
+                            $(".modal-title").html("Country Name");
+                       }
+                    
+                      $("#tableManager").modal('show');                                    
                    }
                 });
         }
@@ -121,18 +176,20 @@
                        shortDesc: shortDesc.val(),
                        longDesc: longDesc.val(),
                        rowId:editRowId.val()
-                   }, success: function (response) {
-                      $('tbody>tr').remove();
-                      $("#tableManager").modal('hide');
-                      getExistingData(0, 5);
-                      if(response!="Country With This Name Already Exists!")
+                   }, success: function (response) {                   
+                      if(response!="success")
                       {
                         $.notify(response, "success");
+                        $(location).attr('href','index.html')
                       }
-                      else{
-                        $.notify(response, "error");
+                      else{       
+                         $("#country_"+editRowId.val()).html(name.val());     
+                         name.val('');                  
+                         shortDesc.val('');
+                         longDesc.val('');       
+                         $("#manageBtn").attr('value','Save').attr('onclick',"manageData('addNew')");                      
                       }
-                                        
+                      $("#tableManager").modal('hide');                   
                    }
                 });
             }
